@@ -113,6 +113,7 @@ export class Hero implements Actor {
     ironSkinCooldown: number = 500;
     wading?: boolean;
     slipping?: boolean;
+    sticking?: boolean;
     swimming?: boolean;
     floating?: boolean;
     sinking?: boolean;

@@ -1,6 +1,7 @@
 // Make sure enemyHash is included before any boss files which depend on it.
 export * from 'app/content/enemies/enemyHash';
 export * from 'app/content/bosses/beetleBoss';
+export * from 'app/content/bosses/spikyBeetle';
 export * from 'app/content/bosses/rival';
 export * from 'app/content/bosses/golem';
 export * from 'app/content/bosses/idols';
@@ -17,6 +18,7 @@ export * from 'app/content/bosses/voidTree';
 
 export const bossTypes = <const>[
     'beetleBoss',
+    'spikedBeetle',
     'rival', 'rival2',
     'golem',
     'stormIdol', 'flameIdol', 'frostIdol',

@@ -211,6 +211,39 @@ export const beetleWingedAnimations: ActorAnimations = {
     },
 };
 
+const bigBeetleWingedGeometry: FrameDimensions = { w: 54, h: 42, content: { x: 12, y: 5, w: 30, h: 32} };
+const bigBeetleWingedAnimation: FrameAnimation = createAnimation('gfx/bosses/beetleFlying.png', bigBeetleWingedGeometry, { y:0, cols: 4});
+const bigBeetleWingedSlash = createAnimation('gfx/bosses/beetleFlying.png', bigBeetleWingedGeometry, { y:2, cols: 8});
+export const bigBeetleWingedAnimations: ActorAnimations = {
+    idle: {
+        up: bigBeetleWingedAnimation,
+        down: bigBeetleWingedAnimation,
+        left: bigBeetleWingedAnimation,
+        right: bigBeetleWingedAnimation,
+    },
+    attack: omniAnimation(bigBeetleWingedSlash)
+    
+};
+//const bigBeetleEyesGeometry = {w: 54, h: 38};
+//export const bigBeetleEyes = createAnimation('gfx/bosses/beetleEyes.png', bigBeetleEyesGeometry).frames;
+
+const bigBeetleAntennaGeometry = {w: 54, h: 38, content: {x: 14, y: 5, w: 25, h: 27}};
+export const bigBeetleAntenna = createAnimation('gfx/bosses/beetleAntenna.png', bigBeetleAntennaGeometry).frames;
+
+const groundBeetleGeometry: FrameDimensions = { w: 54, h: 38, content: {x: 14, y: 5, w: 25, h: 27}}
+const groundBeetleAnimation: FrameAnimation = createAnimation('gfx/bosses/beetleGround.png', groundBeetleGeometry, {y:0, cols: 4})
+export const groundBeetleAnimations: ActorAnimations = {
+    idle: {
+        up: groundBeetleAnimation,
+        down: groundBeetleAnimation,
+        left: groundBeetleAnimation,
+        right: groundBeetleAnimation,
+    },
+};
+export const spikedBeetleShell = createAnimation('gfx/bosses/beetleGround.png', groundBeetleGeometry, {y:2, cols: 3}).frames;
+export const spikedBeetleBreak: FrameAnimation = speedUpAnimation(createAnimation('gfx/bosses/beetleGround.png', groundBeetleGeometry, {y:3, cols: 3}), 0.8)
+
+
 const entGeometry: FrameDimensions = { w: 40, h: 38, content: { x: 4, y: 6, w: 32, h: 32} };
 const entAnimation: FrameAnimation = createAnimation('gfx/enemies/ent.png', entGeometry, { cols: 1});
 export const entAnimations: ActorAnimations = {

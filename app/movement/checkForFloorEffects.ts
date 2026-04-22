@@ -36,6 +36,7 @@ export function checkForFloorEffects(state: GameState, hero: Hero) {
     const bootsAreSlippery = hero.savedData.equippedBoots === 'cloudBoots';
     // Here is assumed to be slipping until we determine a reason that they are not.
     hero.slipping = true;
+    hero.sticking = false;
     hero.canFloat = false;
     hero.isOverClouds = false;
     hero.isTouchingPit = false;
@@ -62,17 +63,6 @@ export function checkForFloorEffects(state: GameState, hero: Hero) {
         if (!touchHit && behaviors.touchHit && hero.onHit) {
             if (!behaviors.touchHit.isGroundHit || hero.z <= 0) {
                 touchHit = behaviors.touchHit;
-
-                /*const { returnHit } = hero.onHit(state, behaviors.touchHit);
-
-                if (behaviors.cuttable && behaviors.cuttable <= returnHit?.damage) {
-                    for (const layer of hero.area.layers) {
-                        const tile = layer.tiles[actualRow]?.[actualColumn];
-                        if (tile?.behaviors?.cuttable <= returnHit.damage) {
-                            destroyTile(state, hero.area, { x: actualColumn, y: actualRow, layerKey: layer.key });
-                        }
-                    }
-                }*/
             }
         }
         if (!behaviors.isBrittleGround && !behaviors.pit && !behaviors.water) {
@@ -88,6 +78,9 @@ export function checkForFloorEffects(state: GameState, hero: Hero) {
         // Clouds boots are not slippery when walking on clouds.
         if (behaviors.cloudGround && hero.savedData.equippedBoots === 'cloudBoots') {
             hero.slipping = false;
+        }
+        if (behaviors.sticky) {
+            hero.sticking = true;
         }
         if (behaviors.cloudGround) {
             hero.isOverClouds = true;

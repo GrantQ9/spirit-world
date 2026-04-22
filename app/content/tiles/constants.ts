@@ -350,6 +350,7 @@ export const bouncyWallBehaviors: TileSource = {
     },
 };
 
+
 const [iceGrenade] = createAnimation('gfx/effects/iceGrenade.png', {w: 16, h: 16}, {x: 1}).frames;
 export const frozenTile: TileSource = {
     w: 16, h: 16,
@@ -363,6 +364,21 @@ export const frozenTile: TileSource = {
             }
             drawFrameAt(context, iceGrenade, {x, y});
         },
+    }},
+};
+
+export const webbedTile: TileSource = {
+    w: 16, h: 16,
+    source: requireFrame('gfx/tiles/webtiles.png', {x: 0, y: 0, w: 16, h: 16}),
+    behaviors: {'all': {
+        defaultLayer: 'floor2', isWebbed: true, sticky: true, cuttable: 1,
+    }},
+};
+export const altWebbedTile: TileSource = {
+    w: 16, h: 16,
+    source: requireFrame('gfx/tiles/webtiles.png', {x: 16, y: 0, w: 16, h: 16}),
+    behaviors: {'all': {
+        defaultLayer: 'floor2', isWebbed: true, sticky: true, cuttable: 1,
     }},
 };
 

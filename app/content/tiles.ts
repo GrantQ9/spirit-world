@@ -42,6 +42,8 @@ import {
     topLeftWall,
     topRightWall,
     unliftableStoneBehavior,
+    webbedTile,
+    altWebbedTile,
 } from 'app/content/tiles/constants';
 import { paletteHash } from 'app/content/tiles/paletteHash';
 import {
@@ -1175,6 +1177,8 @@ addTiles([
     ...vanaraWallEdges,
     halves,
     ...allGrassTiles,
+    webbedTile,
+    altWebbedTile,
 ]);
 
 // This invalid is in the middle of a bunch of other tiles so it is easiest to just delete after adding it.

@@ -397,6 +397,8 @@ interface HitProperties {
     // If this is false, this hit only applies when there is no ledge delta between the anchor point and the target.
     // This is ignored if anchorPoint is not set. If this is unset the hit ignores ledges entirely.
     isHigh?: boolean
+    //If true, will put webs on ground and make sticky
+    isWebbed?: boolean
 }
 
 interface HitResult {

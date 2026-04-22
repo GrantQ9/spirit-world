@@ -89,6 +89,7 @@ interface TileBehaviors {
     blocksStaff?: boolean
     // Can be destroyed by weapon
     cuttable?: number
+    changedByHit?: number
     // Hit applies to enemies/heroes on contact.
     touchHit?: HitProperties
     // Special development flag indicating that this tile has been deleted from the game
@@ -190,6 +191,9 @@ interface TileBehaviors {
     // Indicates the tile is frozen which causes it to have an ice overlay and slippery behavior.
     isFrozen?: boolean
     slippery?: boolean
+    // Indicates the tile is webbed which gives it a web overlay and slows movement
+    isWebbed?: boolean
+    sticky?: boolean
     // To be used if we add pixel precision to ice floors for ice attacks.
     slipperyMap?: Uint16Array
     water?: PixelBehavior

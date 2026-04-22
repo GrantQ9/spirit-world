@@ -1,6 +1,6 @@
 import { enemyDefinitions } from 'app/content/enemies/enemyHash';
 import { Enemy } from 'app/content/enemy';
-import { beetleWingedAnimations } from 'app/content/enemyAnimations';
+import { bigBeetleWingedAnimations, beetleWingedAnimations, /*bigBeetleEyes*/} from 'app/content/enemyAnimations';
 import { certainLifeLootTable } from 'app/content/lootTables';
 import {
     accelerateInDirection,
@@ -11,15 +11,45 @@ import { getAreaSize } from 'app/utils/getAreaSize';
 import { addObjectToArea } from 'app/utils/objects';
 import { getVectorToNearbyTarget } from 'app/utils/target';
 
+const friendHP = 3;
+
+function onHitBeetle(state: GameState, enemy: Enemy, hit: HitProperties): HitResult {
+    if (!enemy.params.friendOut && enemy.life <= friendHP) {
+        hit = {
+            ...hit,
+            damage: 0,
+        }
+    }
+    return enemy.defaultOnHit(state, hit);
+}
+
+
 enemyDefinitions.beetleBoss = {
     naturalDifficultyRating: 5,
     // Reset the boss to its starting position if you leave the arena.
     alwaysReset: true,
-    animations: beetleWingedAnimations, flying: true, scale: 3,
+    //abilities: [slashAbility],
+    animations: bigBeetleWingedAnimations, flying: true, scale: 1,
     acceleration: 0.5, speed: 1.5,
     initialMode: 'hidden',
-    life: 12, touchDamage: 1, update: updateBeetleBoss,
+    onHit: onHitBeetle,
+    params: {
+        friendOut: false,
+    },
+    life: 9, touchDamage: 1, update: updateBeetleBoss,
+    /*renderOver(context, state, enemy) {
+        if (enemy.mode === 'rush') {
+            enemy.defaultRender(context, state, bigBeetleEyes[5])
+        } else if (enemy.mode === 'summonFriend') {
+            enemy.defaultRender(context, state, bigBeetleEyes[2])
+        } else if (enemy.mode === 'circle') {
+            enemy.defaultRender(context, state, bigBeetleEyes[4])
+        } else {
+            enemy.defaultRender(context, state, bigBeetleEyes[0])
+        }
+    },*/
 };
+
 enemyDefinitions.beetleBossWingedMinionDefinition = {
     naturalDifficultyRating: 1,
     // Despawn these if you leave the boss arena.
@@ -52,18 +82,21 @@ function updateBeetleBoss(state: GameState, enemy: Enemy): void {
             enemy.setMode('choose');
         }
         return;
-    }
+    } 
     if (enemy.life <= enemy.maxLife / 2) {
-        enemy.speed = enemyDefinitions.beetleBoss.speed + 1;
+        enemy.speed = enemyDefinitions.beetleBoss?.speed ?? 1.5 + 1;
     } else {
-        enemy.speed = enemyDefinitions.beetleBoss.speed;
+        enemy.speed = enemyDefinitions.beetleBoss?.speed ?? 1.5;
     }
     if (enemy.mode === 'choose' && enemy.modeTime > 500) {
         enemy.vx = enemy.vy = 0;
         // This boss is meant to not be too challenging for new players,
         // so it summons minions that drop life rewards more frequently as the player loses life.
         const summonChance = 0.2 + Math.max(0, 0.6 * (4 - state.hero.life) / 2);
-        if (Math.random() < summonChance && !enemy.params.summonedRecently) {
+        if (enemy.life <= friendHP && !enemy.params.friendOut) {
+            enemy.setMode('friendRetreat')
+        }
+        else if (Math.random() < summonChance && !enemy.params.summonedRecently) {
             enemy.params.summonedRecently = true;
             enemy.setMode('retreat');
             enemy.params.summonTheta = Math.random() * 2 * Math.PI;
@@ -103,7 +136,12 @@ function updateBeetleBoss(state: GameState, enemy: Enemy): void {
         if (moveEnemyToTargetLocation(state, enemy, section.x + section.w / 2, section.y + hitbox.h / 2) === 0) {
             enemy.setMode('summon');
         }
-    } else if (enemy.mode === 'summon') {
+    } else if (enemy.mode === 'friendRetreat') {
+        if (moveEnemyToTargetLocation(state, enemy, section.x + section.w / 2, section.y + hitbox.h / 2) === 0) {
+            enemy.setMode('summonFriend');
+        }
+      }
+      else if (enemy.mode === 'summon') {
         if (enemy.modeTime === 500 || enemy.modeTime === 1000 || enemy.modeTime === 1500) {
             const theta = enemy.params.summonTheta + 2 * Math.PI * enemy.modeTime / 500 / 3;
             const minion = new Enemy(state, {
@@ -133,12 +171,44 @@ function updateBeetleBoss(state: GameState, enemy: Enemy): void {
                 enemy.setMode('choose');
             }
         }
+    } else if (enemy.mode === 'summonFriend') {
+        if (enemy.modeTime === 500) {
+            const friend = new Enemy(state, {
+                type: 'boss',
+                id: enemy.definition.id,
+                status: 'normal',
+                enemyType: 'beetleBoss',
+                lootType: 'empty',
+                params: {
+                    friendOut: true
+                },
+                x: 52,
+                y: 52,
+            });
+            if ('lootType' in enemy.definition && 'lootType' in friend.definition) {
+                friend.definition.lootType = enemy.definition.lootType;
+            }
+            friend.area = enemy.area;
+            friend.alwaysUpdate = true;
+            addObjectToArea(state, enemy.area, friend);
+            enemy.params.friendOut = true;
+        }
+        if (enemy.modeTime > 2500) {
+            if (moveEnemyToTargetLocation(state, enemy, enemy.definition.x + hitbox.w / 2, enemy.definition.y + hitbox.h / 2) === 0) {
+                enemy.setMode('choose');
+            }
+        }
     } else if (enemy.mode === 'rush') {
         // Just accelerate in the direction the boss chose when it entered this mode.
         accelerateInDirection(state, enemy, {x: enemy.vx, y: enemy.vy});
         if (enemy.modeTime <= 1300) {
             enemy.x += enemy.vx;
             enemy.y += enemy.vy;
+        }
+        // Play the slash animation at the peak of the rush, just before the boss slows down.
+
+        if (enemy.modeTime >= 1300 && enemy.modeTime < 2000) {
+            enemy.changeToAnimation('attack', 'idle')
         }
         if (enemy.modeTime >= 2000) {
             // If the player has less than 2 health always return immediately.

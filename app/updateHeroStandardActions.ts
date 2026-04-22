@@ -93,6 +93,9 @@ export function updateHeroStandardActions(this: void, state: GameState, hero: He
         // They would be almost strictly worse than the Forge Boots without this.
         movementSpeed *= 1.1;
     }
+    if (hero.sticking) {
+        movementSpeed *= 0.4
+    }
     if (isClimbing) {
         hero.slipping = false;
         // Boots have less dramatic impact on movement speed when climbing.

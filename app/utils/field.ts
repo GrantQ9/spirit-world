@@ -9,7 +9,6 @@ import {getDrawPriority} from 'app/utils/layers';
 import {getObjectBehaviors, isObject, removeObjectFromArea} from 'app/utils/objects';
 import {resetTileBehavior} from 'app/utils/tileBehavior';
 
-
 export {directionMap, getDirection} from 'app/utils/direction';
 
 export function isRectOpen(state: GameState, area: AreaInstance, {x, y, w, h}: Rect, movementProperties: MovementProperties = {}): boolean {
@@ -467,6 +466,17 @@ export function hitTargets(this: void, state: GameState, area: AreaInstance, hit
             combinedResult.hit = true;
             continue;
         }
+        if (behavior.changedByHit) {
+            for (const layer of area.layers) {
+                const tile = layer.tiles[target.y][target.x];
+                if (tile?.behaviors?.changedByHit) {
+                    destroyTile(state, area, {...target, layerKey: layer.key});
+                    coverTile(state, area, target.x, target.y, behavior.changedByHit);
+                }
+            }
+            combinedResult.hit = true;
+            continue;
+        }
         if (behavior?.pickupWeight <= hit.crushingPower) {
             // We need to find the specific liftable layers that can be destroyed.
             for (const layer of area.layers) {
@@ -654,23 +664,48 @@ export function hitTargets(this: void, state: GameState, area: AreaInstance, hit
                 // console.log('updated behavior', area.behaviorGrid?.[target.y]?.[target.x]);
             }
             //console.log('froze tile', area.behaviorGrid?.[target.y]?.[target.x]);
-        } /*else if (hit.element === 'fire' && typeof behavior?.elementTiles?.fire !== 'undefined') {
+        } else if (hit.isWebbed)
+        {
+            let topLayer: AreaLayer;
+            let foundBlockingLayer = false;
+            // We want to allow webbing on top of ledge behaviors without losing the ledge behaviors, so we have to
+            // record any found any then include those on the frozen tile behavior.
+            let underLedges: any, underDiagonalLedge: any;
             for (const layer of area.layers) {
-                const tile = layer.tiles?.[target.y]?.[target.x];
-                const fireTile = tile?.behaviors?.elementTiles?.fire;
-                if (typeof fireTile !== 'undefined') {
-                    layer.tiles[target.y][target.x] = layer.originalTiles[target.y][target.x] = allTiles[fireTile];
+                // Never web anything in the foreground.
+                if (getDrawPriority(layer.definition) === 'foreground') {
+                    break;
+                }
+                //const behaviors = layer.tiles[target.y][target.x]?.behaviors;
+                const behaviors = {
+                    ...layer.tiles[target.y][target.x]?.behaviors,
+                    ...layer.maskTiles?.[target.y]?.[target.x]?.behaviors,
+                };
+                // Blocking layers prevent webbing until another layer is found that erases the blocking behavior.
+                if (foundBlockingLayer && !(behaviors?.isLava || behaviors?.isLavaMap || behaviors?.cloudGround || behaviors?.isGround === true)) {
+                    continue;
+                }
+                foundBlockingLayer = false;
+                if (!behaviors?.isOverlay
+                    && !behaviors?.solid
+                    && !behaviors?.pit && !behaviors?.pitMap
+                    && !behaviors?.ledges
+                ) {
+                    underLedges = behaviors?.ledges || underLedges;
+                    underDiagonalLedge = behaviors?.diagonalLedge || underDiagonalLedge;
+                    topLayer = layer;
+                } else {
+                    foundBlockingLayer = true;
+                    underLedges = undefined;
+                    underDiagonalLedge = undefined;
                 }
             }
-            if (area.tilesDrawn[target.y]?.[target.x]) {
-                area.tilesDrawn[target.y][target.x] = false;
+            if (topLayer) {
+                coverTile(state, area, target.x, target.y, 2505);
+                area.checkToRedrawTiles = true;
+                resetTileBehavior(area, target);
             }
-            area.checkToRedrawTiles = true;
-            resetTileBehavior(area, target);
-        }*/
-        // Determine if this hit a solid wall that would stop a projectile:
-        //const direction = (hit.vx || hit.vy) ? getDirection(hit.vx, hit.vy, true) : null;
-
+        }
     }
     return combinedResult;
 }
