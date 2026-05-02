@@ -211,9 +211,9 @@ export const beetleWingedAnimations: ActorAnimations = {
     },
 };
 
-const bigBeetleWingedGeometry: FrameDimensions = { w: 54, h: 42, content: { x: 12, y: 5, w: 30, h: 32} };
+const bigBeetleWingedGeometry: FrameDimensions = { w: 54, h: 42, content: { x: 12, y: 4, w: 30, h: 32} };
 const bigBeetleWingedAnimation: FrameAnimation = createAnimation('gfx/bosses/beetleFlying.png', bigBeetleWingedGeometry, { y:0, cols: 4});
-const bigBeetleWingedSlash = createAnimation('gfx/bosses/beetleFlying.png', bigBeetleWingedGeometry, { y:2, cols: 8});
+const bigBeetleWingedSlash = createAnimation('gfx/bosses/beetleFlying.png', bigBeetleWingedGeometry, { y:4, cols: 7});
 export const bigBeetleWingedAnimations: ActorAnimations = {
     idle: {
         up: bigBeetleWingedAnimation,
@@ -224,8 +224,14 @@ export const bigBeetleWingedAnimations: ActorAnimations = {
     attack: omniAnimation(bigBeetleWingedSlash)
     
 };
-//const bigBeetleEyesGeometry = {w: 54, h: 38};
-//export const bigBeetleEyes = createAnimation('gfx/bosses/beetleEyes.png', bigBeetleEyesGeometry).frames;
+
+const bigBeetleLimbsGeometry: FrameDimensions = { w: 54, h: 42, content: { x: 12, y: 4, w: 28, h: 14} }; 
+export const bigBeetleLimbs = createAnimation('gfx/bosses/beetleFlying.png', bigBeetleLimbsGeometry, { y: 1, cols: 1}).frames;
+export const bigBeetleLimbSlash = createAnimation('gfx/bosses/beetleFlying.png', bigBeetleLimbsGeometry, { y: 5, cols: 7});
+export const bigBeetleBrightSlash = createAnimation('gfx/bosses/beetleFlying.png', bigBeetleLimbsGeometry, {x: 3, y: 6, cols: 1}).frames;
+
+const bigBeetleEyesGeometry = {w: 54, h: 38, content: {x: 12, y: 7, w: 30, h: 32}};
+export const bigBeetleEyes = createAnimation('gfx/bosses/beetleEyes.png', bigBeetleEyesGeometry).frames;
 
 const bigBeetleAntennaGeometry = {w: 54, h: 38, content: {x: 14, y: 5, w: 25, h: 27}};
 export const bigBeetleAntenna = createAnimation('gfx/bosses/beetleAntenna.png', bigBeetleAntennaGeometry).frames;

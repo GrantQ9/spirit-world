@@ -371,14 +371,14 @@ export const webbedTile: TileSource = {
     w: 16, h: 16,
     source: requireFrame('gfx/tiles/webtiles.png', {x: 0, y: 0, w: 16, h: 16}),
     behaviors: {'all': {
-        defaultLayer: 'floor2', isWebbed: true, sticky: true, cuttable: 1,
+        defaultLayer: 'floor2', isWebbed: true, sticky: true, cuttable: 1, low: true
     }},
 };
 export const altWebbedTile: TileSource = {
     w: 16, h: 16,
     source: requireFrame('gfx/tiles/webtiles.png', {x: 16, y: 0, w: 16, h: 16}),
     behaviors: {'all': {
-        defaultLayer: 'floor2', isWebbed: true, sticky: true, cuttable: 1,
+        defaultLayer: 'floor2', isWebbed: true, sticky: true, cuttable: 1, low: true
     }},
 };
 

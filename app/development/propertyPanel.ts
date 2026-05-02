@@ -519,8 +519,8 @@ function renderProperty(property: EditorProperty<any> | HTMLElement | string): s
                         <input type="checkbox" ${property.value ? 'checked' : ''} name="${property.id || property.name}" />
                     </span>`;
         } else if (isStringArrayProperty(property)) {
-            const options = property.values.filter(v => !property.value.includes(v));
-            const selectedContainer = property.value.length ? `
+            const options = property.values?.filter(v => !property.value?.includes(v));
+            const selectedContainer = property.value?.length ? `
                 <div class="pp-tag-container" name="${property.id || property.name}">
                     ${property.value.map(v => `<span class="pp-tag">${v} </span>`).join('')}
                 </div>
@@ -528,9 +528,9 @@ function renderProperty(property: EditorProperty<any> | HTMLElement | string): s
 
             return `<span class="pp-property">
                         <div>
-                            ${property.name} <select name="${property.id || property.name}" ${!options.length ? 'disabled' : ''}>
+                            ${property.name} <select name="${property.id || property.name}" ${!options?.length ? 'disabled' : ''}>
                                 <option disabled selected value> -- Add -- </option>
-                                ${options.map(val => `<option>${val}</option>`)}
+                                ${options?.map(val => `<option>${val}</option>`)}
                             </select>
                         </div>
                         ${selectedContainer}

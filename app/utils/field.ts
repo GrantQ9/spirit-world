@@ -701,7 +701,7 @@ export function hitTargets(this: void, state: GameState, area: AreaInstance, hit
                 }
             }
             if (topLayer) {
-                coverTile(state, area, target.x, target.y, 2505);
+                coverTile(state, area, target.x, target.y, 2509);
                 area.checkToRedrawTiles = true;
                 resetTileBehavior(area, target);
             }

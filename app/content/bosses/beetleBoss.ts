@@ -1,6 +1,6 @@
 import { enemyDefinitions } from 'app/content/enemies/enemyHash';
 import { Enemy } from 'app/content/enemy';
-import { bigBeetleWingedAnimations, beetleWingedAnimations, /*bigBeetleEyes*/} from 'app/content/enemyAnimations';
+import { bigBeetleWingedAnimations, beetleWingedAnimations, bigBeetleEyes, bigBeetleLimbSlash, bigBeetleLimbs, bigBeetleBrightSlash} from 'app/content/enemyAnimations';
 import { certainLifeLootTable } from 'app/content/lootTables';
 import {
     accelerateInDirection,
@@ -10,14 +10,16 @@ import {
 import { getAreaSize } from 'app/utils/getAreaSize';
 import { addObjectToArea } from 'app/utils/objects';
 import { getVectorToNearbyTarget } from 'app/utils/target';
+import { getFrame } from 'app/utils/animations';
 
-const friendHP = 3;
+const friendHP = 6;
+
 
 function onHitBeetle(state: GameState, enemy: Enemy, hit: HitProperties): HitResult {
     if (!enemy.params.friendOut && enemy.life <= friendHP) {
         hit = {
             ...hit,
-            damage: 0,
+            damage: hit.damage / 5,
         }
     }
     return enemy.defaultOnHit(state, hit);
@@ -36,18 +38,31 @@ enemyDefinitions.beetleBoss = {
     params: {
         friendOut: false,
     },
-    life: 9, touchDamage: 1, update: updateBeetleBoss,
-    /*renderOver(context, state, enemy) {
-        if (enemy.mode === 'rush') {
-            enemy.defaultRender(context, state, bigBeetleEyes[5])
-        } else if (enemy.mode === 'summonFriend') {
+    life: 12, touchDamage: 1, update: updateBeetleBoss,
+    render(context, state, enemy) {
+        enemy.defaultRender(context, state);
+    },
+    renderOver(context, state, enemy) {
+        if (enemy.currentAnimationKey === 'attack') {
+            const frame = getFrame(bigBeetleLimbSlash, enemy.animationTime);
+            console.log(enemy.animationTime)
+            enemy.defaultRender(context, state, frame);
+            if (400 <= enemy.animationTime && enemy.animationTime <= 600) {
+                enemy.defaultRender(context, state, bigBeetleBrightSlash[0])
+            }
+        } else {
+            enemy.defaultRender(context, state, bigBeetleLimbs[0])
+        }
+        if (true) {
+            enemy.defaultRender(context, state, bigBeetleEyes[0])
+        } /*else if (enemy.mode === 'summonFriend') {
             enemy.defaultRender(context, state, bigBeetleEyes[2])
         } else if (enemy.mode === 'circle') {
             enemy.defaultRender(context, state, bigBeetleEyes[4])
         } else {
             enemy.defaultRender(context, state, bigBeetleEyes[0])
-        }
-    },*/
+        }*/
+    },
 };
 
 enemyDefinitions.beetleBossWingedMinionDefinition = {
@@ -209,6 +224,7 @@ function updateBeetleBoss(state: GameState, enemy: Enemy): void {
 
         if (enemy.modeTime >= 1300 && enemy.modeTime < 2000) {
             enemy.changeToAnimation('attack', 'idle')
+            
         }
         if (enemy.modeTime >= 2000) {
             // If the player has less than 2 health always return immediately.
