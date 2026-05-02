@@ -187,39 +187,30 @@ interface RandomizerGoal {
 }
 
 interface DoorLocation {
+    key: string
+    originalTargetKey: string
     location: ZoneLocation
-    definition: EntranceDefinition
+    definition: EntranceDefinition|MarkerDefinition
+    node: LogicNode
+    // Entrance is considered "inside" and should be paired
+    // with an entrance considered "outside".
+    isInterior: boolean
+    isUnderWater: boolean
 }
 interface EntranceData {
     targetZone?: string
     targetObjectId?: string
     status?: ObjectStatus
 }
+
 interface RandomizerEntrances {
     // This represents the progress/result of randomizing the entrances in the game.
     // Entrances in the game will check for their `${zoneKey}:${objectId}` on this map
     // and use the defined targetZone+targetObjectId if found
     entranceAssignments: {[key in string]: EntranceData}
     random: SRandom
-    allTargetedKeys: Set<string>
     fixedNimbusCloudZones: Set<string>
-    allUnreachableNormalExits: string[]
-    allUnreachableSpiritExits: string[]
-    forbiddenNormalExitsKeysByEntranceKey: {[key: string]: string[]}
-    forbiddenSpiritExitsKeysByEntranceKey: {[key: string]: string[]}
     targetIdMap: {[key in string]: DoorLocation[]}
-    normalEntrances: Set<string>
-    normalExits: Set<string>
-    spiritEntrances: Set<string>
-    spiritExits:Set<string>
-    waterEntrances:Set<string>
-    waterExits:Set<string>
-    connectedNormalEntrances: Set<string>
-    connectedSpiritEntrances: Set<string>
-    normalPitEntrances: DoorLocation[]
-    normalPitTargets: Set<string>
-    spiritPitEntrances: DoorLocation[]
-    spiritPitTargets: Set<string>
 }
 type NodesByZoneKey = {[zoneKey in string]: LogicNode[]};
 type NodesById = {[nodeId in string]: LogicNode};

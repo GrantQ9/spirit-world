@@ -47,7 +47,7 @@ export const womanAnimations: ActorAnimations = createHumanNpcActorAnimations({
     shoes: 1,
 });
 
-export const ambrosiaAnimations: ActorAnimations = createHumanNpcActorAnimations({
+export const woman2Animations: ActorAnimations = createHumanNpcActorAnimations({
     isWoman: true,
     skin: 2,
     hairColor: 0,
@@ -364,4 +364,45 @@ const blacksmithTwoImage: string = 'gfx/npcs/blacksmithTwo.png';
 const blacksmithTwoGeometry: FrameDimensions = {w: 36, h: 36, content: {x: 10, y: 20, w: 16, h: 16}};
 export const blacksmithTwoAnimations: ActorAnimations = {
     idle: omniAnimation(createAnimation(blacksmithTwoImage, blacksmithTwoGeometry, {y: 2})),
+};
+
+
+const ambrosiaImage: string = 'gfx/npcs/ambrosia.png';
+const ambrosiaGeometry: FrameDimensions = {w: 19, h: 27, content: {x: 3, y: 17, w: 14, h: 10}};
+export const ambrosiaAnimations: ActorAnimations = {
+    idle: omniAnimation(createAnimation(ambrosiaImage, ambrosiaGeometry, {y: 0})),
+};
+
+const guardianImage: string = 'gfx/npcs/guardian.png';
+const guardianGeometry: FrameDimensions = {w: 20, h: 27, content: {x: 2, y: 11, w: 16, h: 16}};
+export const guardianAnimations: ActorAnimations = {
+    idle: {
+        up: createAnimation(guardianImage, guardianGeometry, {x: 2}),
+        left: createAnimation(guardianImage, guardianGeometry, {x: 3}),
+        down: createAnimation(guardianImage, guardianGeometry, {x: 0}),
+        right: createAnimation(guardianImage, guardianGeometry, {x: 1}),
+    },
+    kneel: {
+        up: createAnimation(guardianImage, guardianGeometry, {y: 1, x: 2}),
+        left: createAnimation(guardianImage, guardianGeometry, {y: 1, x: 3}),
+        down: createAnimation(guardianImage, guardianGeometry, {y: 1, x: 0}),
+        right: createAnimation(guardianImage, guardianGeometry, {y: 1, x: 1}),
+    },
+};
+
+const elderImage: string = 'gfx/npcs/elder.png';
+const elderGeometry: FrameDimensions = {w: 21, h: 28, content: {x: 2, y: 12, w: 16, h: 16}};
+export const elderAnimations: ActorAnimations = {
+    idle: {
+        up: createAnimation(elderImage, elderGeometry, {x: 2}),
+        left: createAnimation(elderImage, elderGeometry, {x: 3}),
+        down: createAnimation(elderImage, elderGeometry, {x: 0}),
+        right: createAnimation(elderImage, elderGeometry, {x: 1}),
+    },
+    move: {
+        up: createAnimation(elderImage, elderGeometry, {y: 3, cols: 8}),
+        left: createAnimation(elderImage, elderGeometry, {y: 4, cols: 8}),
+        down: createAnimation(elderImage, elderGeometry, {y: 1, cols: 8}),
+        right: createAnimation(elderImage, elderGeometry, {y: 2, cols: 8}),
+    },
 };

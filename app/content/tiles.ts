@@ -45,34 +45,35 @@ import {
     webbedTile,
     altWebbedTile,
 } from 'app/content/tiles/constants';
-import { paletteHash } from 'app/content/tiles/paletteHash';
+import {paletteHash} from 'app/content/tiles/paletteHash';
+import {allAshTiles} from 'app/content/tiles/ash';
 import {
     allCavePitTileSources,
     cavePitHorizontalWalls,
     cavePitAngledWallsIn,
     cavePitAngledWallsOut,
 } from 'app/content/tiles/cavePits';
-import { allCrystalCavePitTileSources, crystalCaveWallToPitTileSources } from 'app/content/tiles/crystalCavePits';
+import {allCrystalCavePitTileSources, crystalCaveWallToPitTileSources} from 'app/content/tiles/crystalCavePits';
 import {allCrystalCaveTileSources, crystalTransparentFloor} from 'app/content/tiles/crystalCaveTiles';
 import {allCrystalSpikeTiles} from 'app/content/tiles/crystalSpikes';
-import { allDesertTileSources } from 'app/content/tiles/desertTiles';
-import { allFancyStoneCeilingTileSources } from 'app/content/tiles/fancyStoneTiles';
-import { allFuturisticTileSources } from 'app/content/tiles/futuristicTiles';
+import {allDesertTileSources} from 'app/content/tiles/desertTiles';
+import {allFancyStoneCeilingTileSources} from 'app/content/tiles/fancyStoneTiles';
+import {allFuturisticTileSources} from 'app/content/tiles/futuristicTiles';
 import {allFlowerTiles, allGardenTiles} from 'app/content/tiles/garden';
 import {allGrassTiles} from 'app/content/tiles/grass';
 import {rugTiles} from 'app/content/tiles/houseInterior';
-import { lava, lavaBubbles, lavaStone } from 'app/content/tiles/lava';
+import {lava, lavaBubbles, lavaStone} from 'app/content/tiles/lava';
 import {allMossTiles} from 'app/content/tiles/moss';
-import { allObsidianTileSources } from 'app/content/tiles/obsidianTiles';
-import { allStoneTileSources } from 'app/content/tiles/stoneTiles';
-import { allStoneCeilingTileSources } from 'app/content/tiles/stoneCeilingTiles';
-import { allStoneExteriorTileSources } from 'app/content/tiles/stoneExteriorTiles';
+import {allObsidianTileSources} from 'app/content/tiles/obsidianTiles';
+import {allStoneTileSources} from 'app/content/tiles/stoneTiles';
+import {allStoneCeilingTileSources} from 'app/content/tiles/stoneCeilingTiles';
+import {allStoneExteriorTileSources} from 'app/content/tiles/stoneExteriorTiles';
 import {allVanaraPitTileSources, vanaraAngledPits} from 'app/content/tiles/vanaraPits';
-import { allWoodTileSources, extraWoodWalls } from 'app/content/tiles/woodTiles';
-import { drawFrame } from 'app/utils/animations';
-import { createCanvasAndContext, debugCanvas } from 'app/utils/canvas';
-import { allImagesLoaded } from 'app/utils/images';
-import { requireFrame } from 'app/utils/packedImages';
+import {allWoodTileSources, extraWoodWalls} from 'app/content/tiles/woodTiles';
+import {drawFrame} from 'app/utils/animations';
+import {createCanvasAndContext, debugCanvas} from 'app/utils/canvas';
+import {allImagesLoaded} from 'app/utils/images';
+import {requireFrame} from 'app/utils/packedImages';
 import {
     allVanaraTileSources,
     vanaraHoleyTransitionTile,
@@ -83,8 +84,8 @@ import {
 } from 'app/content/tiles/vanaraTree'
 import {allLightJadeCityTileSources} from 'app/content/tiles/jadeCityLight';
 import {allDarkJadeCityTileSources} from 'app/content/tiles/jadeCityDark';
-import { allJadeInteriorLightTileSources } from 'app/content/tiles/jadeInteriorLight';
-import { allJadeInteriorDarkTileSources } from 'app/content/tiles/jadeInteriorDark';
+import {allJadeInteriorLightTileSources} from 'app/content/tiles/jadeInteriorLight';
+import {allJadeInteriorDarkTileSources} from 'app/content/tiles/jadeInteriorDark';
 import {bigKnobbyTreeSources, bigTreeSources, smallTreeSources} from 'app/content/tiles/trees';
 import {warnOnce} from 'app/randomizer/warnOnce';
 
@@ -379,18 +380,6 @@ const caveFloorSpiritPalette: TileSource = {
     source: requireFrame('gfx/tiles/cavefloorspirit.png', {x: 16, y: 0, w: 320, h: 16}),
     behaviors: {},
 };
-
-const caveCornersPalette: TileSource = {
-    w: 16, h: 16,
-    source: requireFrame('gfx/tiles/cavewalls.png', {x: 32, y: 0, w: 8 * 32, h: 32}),
-    behaviors: {'all': {solid: true}},
-};
-const caveWallsPalette: TileSource = {
-    w: 16, h: 16,
-    source: requireFrame('gfx/tiles/cavewalls.png', {x: 0, y: 32, w: 32, h: 4 * 32}),
-    behaviors: {'all': {solid: true}},
-};
-
 
 const spiritPlantsPalette: TileSource = {
     w: 16, h: 16,
@@ -1076,8 +1065,7 @@ addTiles([
     caveFloorPalette,
     // 'Abyss' between walls.
     singleTileSource('gfx/tiles/cavearranged2.png', { defaultLayer: 'foreground', isVeryTall: true, solid: true }, 0, 240),
-    caveWallsPalette,
-    caveCornersPalette,
+    deletedTiles(48),
     spiritPlantsPalette,
     brightGrass,
     floorEyeTile,
@@ -1179,6 +1167,7 @@ addTiles([
     ...allGrassTiles,
     webbedTile,
     altWebbedTile,
+    ...allAshTiles,
 ]);
 
 // This invalid is in the middle of a bunch of other tiles so it is easiest to just delete after adding it.

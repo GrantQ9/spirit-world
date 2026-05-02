@@ -76,7 +76,7 @@ export const enemySeed = readGetParameterAsInt('enemySeed');*/
 // 'foreground3' is rarely required for certain combinations of trees.
 export const layersInOrder = ['water', 'floor', 'floor2', 'field', 'field2', 'foreground', 'foreground2', 'foreground3', 'behaviors'];
 
-export const overworldKeys = ['overworld', 'underwater', 'sky', 'forest', 'forestWater'];
+export const overworldKeys = new Set(['overworld', 'underwater', 'sky', 'forest', 'forestWater']);
 
 export function getElementColor(element: MagicElement) {
     switch(element){
@@ -92,7 +92,8 @@ export function getElementLightColor(element: MagicElement): LightColor {
         case 'ice': return {r: 255, g: 255, b: 255};
         case 'lightning': return {r: 255, g: 255, b: 0};
     }
-    return {r: 150, g: 150, b: 150};
+    // This will make a light with no color overlay.
+    return undefined; //{r: 255, g: 255, b: 255};
 }
 
 // Gameplay modifiers

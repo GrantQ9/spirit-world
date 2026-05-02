@@ -8,12 +8,12 @@ import {editingState} from 'app/development/editingState';
 import {getCanvasScale} from 'app/development/getCanvasScale';
 import {initializeSection} from 'app/development/sections';
 import {CANVAS_WIDTH, CANVAS_HEIGHT, overworldKeys} from 'app/gameConstants';
+import {findObjectLocation} from 'app/randomizer/find';
 import {heroIcon} from 'app/render/heroAnimations';
 import {checkToRedrawTiles, drawEntireFrame} from 'app/scenes/field/renderField';
 import {isMapSceneActive} from 'app/scenes/map/showMapScene';
 import {createAnimation, drawFrame} from 'app/utils/animations';
 import {mainCanvas} from 'app/utils/canvas';
-import {findObjectLocation} from 'app/utils/enterZoneByTarget';
 import {createCanvasAndContext, drawCanvas} from 'app/utils/canvas';
 import {clamp, isPointInShortRect, boxesIntersect, pad} from 'app/utils/index';
 import {getOverworldMapId} from 'app/utils/location';
@@ -99,7 +99,7 @@ export function renderOverworldMap(context: CanvasRenderingContext2D, state: Gam
     refreshWorldMap(state, zone);
     drawCanvas(context, mapCanvas, {x: 0, y: 0, w: 192, h: 192}, innerWorldMapRectangle);
 
-    if (overworldKeys.includes(state.location.zoneKey)) {
+    if (overworldKeys.has(state.location.zoneKey)) {
         if (state.time % 1000 <= 600) {
             const mapCoordinates = convertLocationToMapCoordinates(state.location);
             drawFrame(context, heroIcon, {
@@ -653,7 +653,7 @@ export function getDisplayedMapSections(state: GameState, scene: MapScene): numb
         return;
     }
     const mapId = state.areaSection?.definition.mapId;
-    if (overworldKeys.includes(mapId)) {
+    if (overworldKeys.has(mapId)) {
         return [];
     }
     const selectedFloorId = getSelectedFloorId(state, scene);

@@ -2,9 +2,12 @@ import {evaluateLogicDefinition, isLogicValid} from 'app/content/logic';
 import {getLootName} from 'app/content/loot';
 import {lootEffects} from 'app/content/lootEffects';
 import {getZone} from 'app/content/zones';
+import {overworldKeys} from 'app/gameConstants';
 import {
     findDoorById,
+    findDoorOrMarkerById,
     findLootObjects,
+    isTeleporterOpen,
 } from 'app/randomizer/find';
 import {getAllNodes} from 'app/randomizer/allNodes';
 import {missingExitNodeSet, missingNodeSet, warnOnce} from 'app/randomizer/warnOnce';
@@ -22,6 +25,15 @@ export function getAllReachableContent(state: GameState, startingNodes: LogicNod
     allEntrances: DoorLocation[]
 } {
     const allNodes = getAllNodes(state);
+    // Mark all paths+exits as unavailable initially.
+    for (const node of allNodes) {
+        for (const path of (node.paths ?? [])) {
+            path.isAvailable = false;
+        }
+        for (const exit of (node.exits ?? [])) {
+            exit.isAvailable = false;
+        }
+    }
     const allNodesByZoneKey: NodesByZoneKey = {};
     const allNodesById: NodesById = {};
     for (const node of allNodes) {
@@ -33,7 +45,8 @@ export function getAllReachableContent(state: GameState, startingNodes: LogicNod
     const allEntrances: DoorLocation[] = [];
     let simulatedState = getDefaultState();
     applySavedState(simulatedState, simulatedState.savedState);
-    const nodes = [...startingNodes];
+    const nodesSeen: Set<LogicNode> = new Set(startingNodes);
+    const nodePaths: NodePath[] = startingNodes.map(node => ({path: [], node}));
     let  counter = 0, changed = false;
     do {
         changed = false;
@@ -43,15 +56,15 @@ export function getAllReachableContent(state: GameState, startingNodes: LogicNod
             debugger;
             return null;
         }
-        changed = expandNodes(simulatedState, nodes, allNodesById, allNodesByZoneKey, allEntrances) || changed;
-        changed = collectAllLootFromNodesInLogic(simulatedState, [...nodes], allLootObjects) || changed;
-        changed = setAllFlagsInNodes(simulatedState, nodes) || changed;
+        changed = expandNodes(simulatedState, nodesSeen, nodePaths, allNodesById, allNodesByZoneKey, allEntrances) || changed;
+        changed = collectAllLootFromNodesInLogic(simulatedState, nodePaths, allLootObjects) || changed;
+        changed = setAllFlagsInNodes(simulatedState, nodePaths) || changed;
     } while (changed);
     //console.log("No new nodes, stopping");
     if (!state.isDemoMode) {
         // Outside demo mode, we expect every node and check to be reachable.
         for (const node of allNodes) {
-            if (!nodes.includes(node)) {
+            if (!nodesSeen.has(node)) {
                 console.log('Missing node', node);
             }
             // These checks are too noisy in general, but they can be useful when missing entrances/exits
@@ -67,27 +80,28 @@ export function getAllReachableContent(state: GameState, startingNodes: LogicNod
                 }
             }*/
         }
-        for (const loot of findLootObjects(allNodes)) {
+        for (const loot of findLootObjects(nodePaths)) {
             if (!simulatedState.savedState.objectFlags[loot.lootObject.id]) {
                 console.log('Missing loot', loot);
             }
         }
     }
     //console.log(Object.keys(simulatedState.savedState.objectFlags));
-    return {allNodes: nodes, allLootObjects, allEntrances};
+    return {allNodes: nodePaths.map(path => path.node), allLootObjects, allEntrances};
 }
 
-
-export function expandNodes(
+function expandNodes(
     simulatedState: GameState,
-    nodes: LogicNode[],
+    nodesSeen: Set<LogicNode>,
+    nodePaths: NodePath[],
     allNodesById: NodesById,
     allNodesByZoneKey: NodesByZoneKey,
     allEntrances: DoorLocation[],
 ): boolean {
     let changed = false;
-    for (let i = 0; i < nodes.length; i++) {
-        const currentNode = nodes[i];
+    for (let i = 0; i < nodePaths.length; i++) {
+        const currentNodePath = nodePaths[i];
+        const currentNode = currentNodePath.node;
         if (!currentNode) {
             console.error('Found undefined node');
             break;
@@ -115,8 +129,13 @@ export function expandNodes(
                 warnOnce(missingNodeSet, path.nodeId, 'Missing node: ');
                 continue;
             }
-            if (!nodes.includes(nextNode)) {
-                nodes.push(nextNode);
+            path.isAvailable = true;
+            if (!nodesSeen.has(nextNode)) {
+                nodesSeen.add(nextNode);
+                nodePaths.push({
+                    path: [...currentNodePath.path, {node: currentNode, path}],
+                    node: nextNode,
+                });
                 changed = true;
                 //console.log("Adding path node", path, nextNode);
             }
@@ -126,8 +145,7 @@ export function expandNodes(
                 //console.log('Invalid logic', exit);
                 continue;
             }
-            const { object, location } = findDoorById(zone, exit.objectId, simulatedState);
-            const exitObject = object as EntranceDefinition;
+            const {object: exitObject,  location } = findDoorById(zone, exit.objectId, simulatedState);
             // console.log(exit.objectId);
             if (!canUseDoor(simulatedState, location, exitObject)) {
                 //console.log('cannot open', exitObject);
@@ -154,15 +172,91 @@ export function expandNodes(
                     'Missing node for exit: ');
                 continue;
             }
-            addEntranceIfNew(allEntrances, {location, definition: exitObject});
-            if (!nodes.includes(nextNode)) {
-                nodes.push(nextNode);
+            exit.isAvailable = true;
+            // Assigning isExit instead of isEntrance to avoid name collision.
+            const isInterior = !isExterior(location.zoneKey, exitObject.targetZone);
+            const isUnderWater = zone.surfaceKey && !location.isSpiritWorld;
+            addEntranceIfNew(allEntrances, {
+                key: `${location.zoneKey}:${exitObject.id}`,
+                // This can be used to collect all entrances that share a common target,
+                // such as when a dungeon entrance + shortcut exit point to the same target.
+                // Typically we want these to point to the same target after randomizing since
+                // it will be confusing and often inconvenient if shortcut exits point to a
+                // random entrance.
+                originalTargetKey: `${exitObject.targetZone}:${exitObject.targetObjectId}`,
+                location,
+                definition: exitObject,
+                node: currentNode,
+                isInterior,
+                isUnderWater,
+            });
+            // Add random code block so I can redeclare consts for the target entrance.
+            {
+                const zone = getZone(exitObject.targetZone);
+                // We don't pass in simulated state because the target of an exit is always considered in logic, for example,
+                // you can leave through locked/cracked doors even if you don't have the tools to use them. The logic only
+                // applies to the entrance you are leaving an area from, not the one you are traveling to.
+                const {object, location} = findDoorOrMarkerById(zone, exitObject.targetObjectId);
+                if (!object) {
+                    console.error('Could not find entrance or marker for', exitObject.targetZone, exitObject.targetObjectId);
+                    debugger;
+                    findDoorOrMarkerById(zone, exitObject.targetObjectId, simulatedState);
+                    throw new Error('Could not find entrance or marker.');
+                }
+                const isUnderWater = zone.surfaceKey && !location.isSpiritWorld;
+                // Since we found this object as the target of an exit, it may be an entrance with no target itself,
+                // such as a pit marker.
+                const originalTargetKey = isEntranceDefinition(object) ? `${object.targetZone}:${object.targetObjectId}` : '';
+                addEntranceIfNew(allEntrances, {
+                    key: `${location.zoneKey}:${object.id}`,
+                    originalTargetKey,
+                    location,
+                    definition: object,
+                    node: nextNode,
+                    // Entrances must be paired in interior/exterior pairs to keep the sets balanced for matching
+                    // currently. So this must be the opposite of the previous entrance.
+                    isInterior: !isInterior,
+                    isUnderWater,
+                });
+            }
+
+            if (!nodesSeen.has(nextNode)) {
+                nodesSeen.add(nextNode);
+                nodePaths.push({
+                    path: [...currentNodePath.path, {node: currentNode, exit}],
+                    node: nextNode,
+                });
                 changed = true;
-                // console.log("Adding door node", exit, nextNode);
+                //console.log("Adding path node", path, nextNode);
             }
         }
     }
     return changed;
+}
+
+
+function isEntranceDefinition(definition: EntranceDefinition | MarkerDefinition): definition is EntranceDefinition {
+    return definition.type !== 'marker' && definition.type !== 'spawnMarker'
+}
+
+// Returns true if the source zone considered "outside" of the target zone.
+// There are a special set of entrances inside of non overworld zones where we
+// pick one zone as the "outside" based on what seems intuitive. For example
+// the Tomb is considered outside of the Cocoon. Intuitively, the zone
+// that is further away from the overworld or is a dead end is considered "inside".
+function isExterior(zoneKey: string, targetZoneKey: string): boolean {
+    return overworldKeys.has(zoneKey)
+        // There are a few special "entrances" inside other zones
+        || zoneKey === 'tomb' && targetZoneKey === 'cocoon'
+        || zoneKey === 'treeVillage' && targetZoneKey === 'forestTemple'
+        || zoneKey === 'caves' && targetZoneKey === 'forestTemple'
+        || zoneKey === 'lakeTunnel' && targetZoneKey === 'helix'
+        || zoneKey === 'warTemple' && targetZoneKey === 'lab'
+        || zoneKey === 'lab' && targetZoneKey === 'tree'
+        || zoneKey === 'grandTemple' && targetZoneKey === 'gauntlet'
+        || zoneKey === 'grandTemple' && targetZoneKey === 'holySanctum'
+        // Dream world is connected to a lot of different zones, any of those entrance objects are considered entrances.
+        || targetZoneKey === 'dream';
 }
 
 function addEntranceIfNew(allEntrances: DoorLocation[], newDoorLocation: DoorLocation) {
@@ -174,9 +268,9 @@ function addEntranceIfNew(allEntrances: DoorLocation[], newDoorLocation: DoorLoc
     }
 }
 
-function collectAllLootFromNodesInLogic(simulatedState: GameState, nodes: LogicNode[], lootObjects: LootWithLocation[]): boolean {
+function collectAllLootFromNodesInLogic(simulatedState: GameState, nodePaths: NodePath[], lootObjects: LootWithLocation[]): boolean {
     let foundNewLoot = false;
-    const reachableChecks: LootWithLocation[] = findLootObjects(nodes, simulatedState);
+    const reachableChecks: LootWithLocation[] = findLootObjects(nodePaths, simulatedState);
     // console.log(debugLocations(reachableChecks));
     for (const check of reachableChecks) {
         // Ignore checks that have already been made.
@@ -216,11 +310,12 @@ function collectAllLootFromNodesInLogic(simulatedState: GameState, nodes: LogicN
     return foundNewLoot;
 }
 
-export function setAllFlagsInNodes(simulatedState: GameState, nodes: LogicNode[]) {
+export function setAllFlagsInNodes(simulatedState: GameState, nodePaths: NodePath[]) {
     let changed, setFlag = false;
     do {
         changed = false;
-        for (const node of nodes) {
+        for (const nodePath of nodePaths) {
+            const node = nodePath.node;
             for (const flag of (node.flags || [])) {
                 if (simulatedState.savedState.objectFlags[flag.flag]) {
                     continue;
@@ -252,7 +347,7 @@ function canUseDoor(simulatedState: GameState, location: FullZoneLocation, door:
         return false;
     }
     if (door.type === 'teleporter') {
-        return simulatedState.hero.savedData.passiveTools.spiritSight > 0 || simulatedState.hero.savedData.passiveTools.trueSight > 0;
+        return isTeleporterOpen(simulatedState, location, door);
     }
     // For this method, we assume that if a player can reach a locked door, the key for the locked door will
     // eventually be in logic.
